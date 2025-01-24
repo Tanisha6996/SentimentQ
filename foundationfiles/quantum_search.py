@@ -6,8 +6,6 @@ from qiskit_aer import Aer
 import pandas as pd
 import csv
 
-# Download stopwords
-download('stopwords')
 
 # List of Mental Health and Well-Being Keywords
 mental_health_keywords = [
