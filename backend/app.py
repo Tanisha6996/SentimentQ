@@ -3,8 +3,6 @@
 # import pickle
 # import time
 # import os
-# from grover_vader_model import GroverSentimentAnalyzer
-# from generic_nlp import GenericNLPAnalyzer
 
 # # Load the two models from pickle files
 # try:
@@ -200,76 +198,170 @@
 #     app.run(debug=True)
 
 
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, render_template, request, jsonify
 import pandas as pd
-import pickle
+import time
+import re
+import csv
+from nltk.corpus import stopwords
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from generic_nlp import GenericNLPAnalyzer
+from nltk import download
+from qiskit import QuantumCircuit
+from qiskit_aer import Aer
+import pickle
 
-
+# Flask app setup
 app = Flask(__name__, template_folder="templates")
 
-# Load the Generic NLP model
-try:
-    with open('generic_nlp_analyzer.pkl', 'rb') as f:
-        generic_analyzer = pickle.load(f)
-    print("Generic NLP Analyzer loaded successfully.")
-except Exception as e:
-    print(f"Error loading Generic NLP Analyzer: {e}")
-    generic_analyzer = None
+# # Download NLTK resources
+# download('stopwords')
+# download('vader_lexicon')
 
+# # Initialize stopwords and VADER
+# stop_words = set(stopwords.words('english'))
+# sia = SentimentIntensityAnalyzer()
 
-@app.route('/')
+# # Mental Health Keywords
+# mental_health_keywords = [
+#     "anxiety", "depression", "stress", "mental health", "therapy",
+#     "mindfulness", "wellness", "self-care", "emotional health", "mental illness",
+#     "happiness", "joy", "gratitude", "resilience", "positivity", "calm",
+#     "relaxation", "hope", "optimism", "contentment", "fatigue", "panic",
+#     "overthinking", "restlessness", "irritability", "insomnia", "burnout", "fear",
+#     "loneliness", "isolation", "psychologist", "counselor", "psychiatry",
+#     "therapy session", "mental health support", "coping mechanisms",
+#     "stress management", "yoga", "journaling", "exercise", "healthy diet",
+#     "#MentalHealth", "#SelfCare", "#Wellness", "#Mindfulness"
+# ]
+
+# # Preprocessing Function
+# def preprocess_and_encode(tweets, keywords):
+#     def clean_tweet(tweet):
+#         tweet = re.sub(r"http\S+", "", tweet)  # Remove URLs
+#         tweet = re.sub(r"[^a-zA-Z\s]", "", tweet)  # Remove special characters
+#         tweet = tweet.lower().strip()
+#         tweet = " ".join([word for word in tweet.split() if word not in stop_words])
+#         return tweet
+
+#     def contains_keyword(tweet, keywords):
+#         return any(keyword in tweet for keyword in keywords)
+
+#     binary_states = []
+#     for tweet in tweets:
+#         cleaned_tweet = clean_tweet(tweet)
+#         binary_states.append(1 if contains_keyword(cleaned_tweet, keywords) else 0)
+#     return binary_states
+
+# # Grover's Algorithm Logic
+# def grover_search(tweets):
+#     binary_states = preprocess_and_encode(tweets, mental_health_keywords)
+#     if not any(binary_states):
+#         return []
+
+#     backend = Aer.get_backend('qasm_simulator')
+#     n = len(binary_states).bit_length()
+#     oracle = oracle_circuit(binary_states)
+#     grover_qc = grover_circuit(n, oracle)
+#     grover_qc.measure_all()
+#     job = backend.run(grover_qc, shots=1024)
+#     result = job.result()
+#     counts = result.get_counts()
+
+#     indices = [int(key, 2) for key, value in counts.items() if value > 0]
+#     valid_indices = sorted([index for index in indices if index < len(binary_states) and binary_states[index] == 1])
+#     return valid_indices
+
+# # Define Oracle Circuit
+# def oracle_circuit(binary_states):
+#     n = len(binary_states).bit_length()
+#     oracle = QuantumCircuit(n)
+#     for i, state in enumerate(binary_states):
+#         if state == 1:
+#             binary_string = bin(i)[2:].zfill(n)
+#             for j, bit in enumerate(binary_string):
+#                 if bit == '0':
+#                     oracle.x(j)
+#             oracle.mcx(list(range(n - 1)), n - 1)  # Multi-controlled Z gate
+#             for j, bit in enumerate(binary_string):
+#                 if bit == '0':
+#                     oracle.x(j)
+#     return oracle
+
+# # Define Grover Circuit
+# def grover_circuit(n, oracle):
+#     qc = QuantumCircuit(n)
+#     qc.h(range(n))
+#     qc.compose(oracle, inplace=True)
+#     qc.h(range(n))
+#     qc.z(range(n))
+#     qc.cz(0, n - 1)  # Multi-controlled Z gate
+#     qc.h(range(n))
+#     return qc
+
+# # Sentiment Analysis Logic
+# def analyze_sentiment(tweet):
+#     score = sia.polarity_scores(tweet)
+#     return 'Positive' if score['compound'] >= 0 else 'Negative'
+
+@app.route("/")
 def index():
-    """
-    Serve the HTML page.
-    """
-    return render_template('index.html')
+    return render_template("index.html")
 
-
-@app.route('/process', methods=['POST'])
-def process():
+@app.route("/analyze_generic", methods=["POST"])
+def analyze_generic():
     """
-    Handle file upload and process with Generic NLP Analyzer.
+    Analyze using Generic NLP (pickle file model).
     """
     try:
-        # Check if the model is loaded
-        if generic_analyzer is None:
-            return jsonify({"error": "Generic NLP Analyzer is not loaded properly."}), 500
-
-        # Validate file upload
-        if 'file' not in request.files:
-            return jsonify({"error": "No file uploaded."}), 400
-
         file = request.files['file']
-        if file.filename == '':
-            return jsonify({"error": "No file selected."}), 400
-
-        # Read the uploaded file
         df = pd.read_csv(file)
-        if 'text' not in df.columns:
-            return jsonify({"error": "The uploaded file must contain a 'text' column."}), 400
-
-        # Extract text data
         tweets = df['text'].tolist()
 
-        # Perform sentiment analysis
+        with open('generic_nlp_analyzer.pkl', 'rb') as f:
+            generic_analyzer = pickle.load(f)
+
+        start_time = time.time()
         sentiments = [generic_analyzer.analyze_sentiment_vader(tweet) for tweet in tweets]
-        positive_count = sum(1 for sentiment in sentiments if sentiment == 1)  # Assuming 1 = Positive
-        negative_count = sum(1 for sentiment in sentiments if sentiment == 0)  # Assuming 0 = Negative
+        end_time = time.time()
 
-        # Return results
+        positive_count = sentiments.count("Positive")
+        negative_count = sentiments.count("Negative")
+
         return jsonify({
-            "message": "File processed successfully!",
-            "sentiment_counts": {
-                "positive": positive_count,
-                "negative": negative_count
-            }
+            "time_taken": end_time - start_time,
+            "positive": positive_count,
+            "negative": negative_count
         })
-
     except Exception as e:
-        print(f"Error during processing: {e}")
         return jsonify({"error": str(e)}), 500
 
+# @app.route("/analyze_grover", methods=["POST"])
+# def analyze_grover():
+#     """
+#     Analyze using Grover's Algorithm + Sentiment Analysis.
+#     """
+#     try:
+#         file = request.files['file']
+#         df = pd.read_csv(file)
+#         tweets = df['text'].tolist()
+
+#         start_time = time.time()
+#         valid_indices = grover_search(tweets)
+#         target_tweets = [tweets[i] for i in valid_indices]
+#         sentiments = [analyze_sentiment(tweet) for tweet in target_tweets]
+#         end_time = time.time()
+
+#         positive_count = sentiments.count("Positive")
+#         negative_count = sentiments.count("Negative")
+
+#         return jsonify({
+#             "time_taken": end_time - start_time,
+#             "positive": positive_count,
+#             "negative": negative_count
+#         })
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)

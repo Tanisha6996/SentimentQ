@@ -1,4 +1,84 @@
-<form action="/process" method="post" enctype="multipart/form-data">
-    <input type="file" name="file">
-    <button type="submit">Upload</button>
-</form>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grover Sentiment Analysis</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">Sentiment Analysis</h1>
+        <p class="text-center">Choose between Generic NLP or Grover’s Algorithm for sentiment analysis.</p>
+        
+        <form id="uploadForm" enctype="multipart/form-data" class="mt-4">
+            <div class="mb-3">
+                <label for="fileInput" class="form-label">Upload Dataset (CSV)</label>
+                <input type="file" class="form-control" id="fileInput" name="file" accept=".csv" required>
+            </div>
+            <div class="d-flex justify-content-between">
+                <button type="button" class="btn btn-primary" id="analyzeGeneric">Analyze with Generic NLP</button>
+                <button type="button" class="btn btn-success" id="analyzeGrover">Analyze with Grover's NLP</button>
+            </div>
+        </form>
+        
+        <hr>
+        <div id="results" class="mt-4"></div>
+    </div>
+
+    <script>
+        // Handle Generic NLP Analysis
+        document.getElementById('analyzeGeneric').addEventListener('click', async () => {
+            const fileInput = document.getElementById('fileInput');
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const response = await axios.post('/analyze_generic', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+
+                displayResults(response.data, "Generic NLP");
+            } catch (error) {
+                handleError(error);
+            }
+        });
+
+        // Handle Grover's NLP Analysis
+        document.getElementById('analyzeGrover').addEventListener('click', async () => {
+            const fileInput = document.getElementById('fileInput');
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const response = await axios.post('/analyze_grover', formData, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+
+                displayResults(response.data, "Grover's NLP");
+            } catch (error) {
+                handleError(error);
+            }
+        });
+
+        // Function to Display Results
+        function displayResults(data, method) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `
+                <h3>Results (${method})</h3>
+                <p><strong>Time Taken:</strong> ${data.time_taken.toFixed(2)} seconds</p>
+                <p><strong>Positive Tweets:</strong> ${data.positive}</p>
+                <p><strong>Negative Tweets:</strong> ${data.negative}</p>
+            `;
+        }
+
+        // Function to Handle Errors
+        function handleError(error) {
+            const resultsDiv = document.getElementById('results');
+            const errorMsg = error.response?.data?.error || error.message || "An unknown error occurred.";
+            resultsDiv.innerHTML = `<p class="text-danger">${errorMsg}</p>`;
+        }
+    </script>
+</body>
+</html>
