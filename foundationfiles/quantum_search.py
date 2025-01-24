@@ -40,12 +40,12 @@ def preprocess_and_encode(tweets, keywords):
         binary_states.append(1 if contains_keyword(cleaned_tweet, keywords) else 0)
     return binary_states
 
-# Saving filtered data to csv
+#saving filtered data to csv
 def save_to_csv(file_name, valid_indices, tweets):
     try:
         with open(file_name, mode='w', newline='', encoding='utf-8') as file:
             writer = csv.writer(file)
-            writer.writerow(["Index", "Tweet"])  # Header
+            writer.writerow(["Index", "Tweet"])  #header
             for index in valid_indices:
                 writer.writerow([index, tweets[index]])
         print(f"Target tweets successfully saved to {file_name}")
