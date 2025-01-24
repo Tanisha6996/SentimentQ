@@ -1,67 +1,78 @@
-from flask import Flask, jsonify, request
-from quantum_search import grover_search
+from flask import Flask, render_template, request, jsonify
+from grover_vader_model import GroverSentimentAnalyzer
+import pandas as pd
+import pickle
+import os
 import time
 
-app = Flask(__name__)
+# Load the GroverSentimentAnalyzer object
+with open('grover_sentiment_analyzer.pkl', 'rb') as pkl_file:
+    analyzer = pickle.load(pkl_file)
 
-# Global variables to store results
-last_hybrid_time = None
-last_traditional_time = None
-positive_count = 0
-negative_count = 0
+app = Flask(__name__, template_folder="../templates")
+
+# Directory to save uploaded files dynamically
+UPLOAD_FOLDER = './'
+TARGET_TWEETS_CSV = os.path.join(UPLOAD_FOLDER, 'target_tweets.csv')
+ANALYZED_TWEETS_CSV = os.path.join(UPLOAD_FOLDER, 'analyzed_tweets.csv')
 
 
-@app.route('/process_tweets', methods=['POST'])
-def process_tweets():
-    """
-    Process tweets using Grover's hybrid model and return performance metrics
-    along with sentiment word counts (positive and negative).
-    """
-    global last_hybrid_time, last_traditional_time, positive_count, negative_count
+@app.route('/')
+def index():
+    return render_template('index2.html')
 
+if __name__ == "__main__":
+    app.run(debug=True)
+
+
+@app.route('/upload', methods=['POST'])
+def upload_and_process():
     try:
-        # Parse input tweets
-        data = request.get_json()
-        tweets = data.get('tweets', [])
+        if 'file' not in request.files:
+            return jsonify({"error": "No file uploaded."}), 400
 
-        if not tweets or not isinstance(tweets, list):
-            return jsonify({"message": "Invalid input. Please provide a list of tweets."}), 400
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({"error": "No selected file."}), 400
 
-        # Step 1: Grover's Hybrid Model
-        start_hybrid = time.time()
-        valid_indices = grover_search(tweets)
+        # Process the file
+        df = pd.read_csv(file)
+        if 'text' not in df.columns:
+            return jsonify({"error": "The uploaded file must contain a 'text' column."}), 400
 
-        if not valid_indices:
-            return jsonify({"message": "No tweets matched the keywords."}), 400
+        tweets = df['text'].tolist()
 
-        last_hybrid_time = time.time() - start_hybrid
+        # Perform Grover search and sentiment analysis
+        start_grover = time.time()
+        valid_indices = analyzer.grover_search(tweets)
+        grover_time = time.time() - start_grover
 
-        # Count positive and negative tweets for the hybrid model
-        positive_count = len([i for i in valid_indices if "positive" in tweets[i].lower()])
-        negative_count = len([i for i in valid_indices if "negative" in tweets[i].lower()])
+        target_csv = os.path.join(UPLOAD_FOLDER, 'target_tweets.csv')
+        analyzer.save_to_csv(target_csv, valid_indices, tweets)
 
-        # Step 2: Traditional NLP-only Sentiment Analysis
-        start_traditional = time.time()
-        # Placeholder for traditional NLP processing
-        time.sleep(0.5)  # Simulating NLP processing time
-        last_traditional_time = time.time() - start_traditional
+        start_sentiment = time.time()
+        analyzed_csv = os.path.join(UPLOAD_FOLDER, 'analyzed_tweets.csv')
+        analyzed_df = analyzer.analyze_tweets_from_csv(target_csv, analyzed_csv)
+        sentiment_time = time.time() - start_sentiment
 
-        # Return performance metrics and word counts
+        positive_count = (analyzed_df['Sentiment'] == 'Positive').sum()
+        negative_count = (analyzed_df['Sentiment'] == 'Negative').sum()
+
         return jsonify({
-            "message": "Tweets processed successfully!",
+            "message": "Dataset processed successfully!",
             "performance": {
-                "hybrid_time": last_hybrid_time,
-                "traditional_time": last_traditional_time
+                "grover_time": grover_time,
+                "sentiment_time": sentiment_time
             },
             "word_counts": {
-                "positive": positive_count,
-                "negative": negative_count
+                "positive": int(positive_count),
+                "negative": int(negative_count)
             }
         })
-
     except Exception as e:
-        return jsonify({"message": f"An error occurred: {str(e)}"}), 500
-
+        # Ensure the response is always JSON
+        return jsonify({"error": str(e)}), 500
+ 
 
 if __name__ == "__main__":
     app.run(debug=True)
