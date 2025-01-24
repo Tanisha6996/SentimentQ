@@ -55,14 +55,14 @@ def save_to_csv(file_name, valid_indices, tweets):
 #defining Grover's Circuit
 def grover_circuit(n, oracle):
     """
-        n (int): Number of qubits (equal to log2 of number of items).
-        oracle (QuantumCircuit): The oracle circuit.
+        n(int)- no. of qubits (equal to log2 of number of items).
+        oracle (QuantumCircuit)- The oracle circuit.
     """
     qc = QuantumCircuit(n)
     #apply H-gates to all qubits
     qc.h(range(n))
     #applying Oracle
-    qc.compose(oracle, inplace=True)  # Use compose instead of +=
+    qc.compose(oracle, inplace=True)  # Using compose instead of +=
     #diffusion Operator
     qc.h(range(n))
     qc.z(range(n))
@@ -70,30 +70,22 @@ def grover_circuit(n, oracle):
     qc.h(range(n))    #returns the QuantumCircuit or grover's algorithm circuit.
     return qc
 
-# Define Oracle Circuit
+#defining Oracle circuit
 def oracle_circuit(binary_states):
-    """
-    Create the oracle circuit based on binary states.
-
-    Args:
-        binary_states (list): Binary encoding of tweets (1 for keyword presence, 0 otherwise).
-
-    Returns:
-        QuantumCircuit: The oracle circuit.
-    """
-    n = len(binary_states).bit_length()  # Number of qubits needed
+    #binary_states (list): binary encoding of tweets (1 for keyword presence, 0 otherwise).
+    n = len(binary_states).bit_length()  #no. of qubits needed
     oracle = QuantumCircuit(n)
     for i, state in enumerate(binary_states):
-        if state == 1:  # Only process states with 1
+        if state == 1:  #only processing states with 1
             binary_string = bin(i)[2:].zfill(n)
             for j, bit in enumerate(binary_string):
                 if bit == '0':
-                    oracle.x(j)  # Flip qubit for |0>
+                    oracle.x(j)  #flipping qubit for |0>
             oracle.mcx(list(range(n - 1)), n - 1)  # Multi-controlled Z
             for j, bit in enumerate(binary_string):
                 if bit == '0':
-                    oracle.x(j)  # Un-flip qubit
-    return oracle
+                    oracle.x(j)  #un-flipping qubit
+    return oracle       #returns the QuantumCircuit or oracle circuit
 
 def grover_search(tweets):
     binary_states = preprocess_and_encode(tweets, mental_health_keywords)
@@ -114,15 +106,12 @@ def grover_search(tweets):
     valid_indices = sorted([index for index in indices if index < len(binary_states) and binary_states[index] == 1])
     return valid_indices
 
-# Example Usage
+#calling the main function
 if __name__ == "__main__":
     input_file = "tweet_data.csv"
     df = pd.read_csv(input_file)
-    tweets = df['text'].tolist()  # Extract the text column
-
-
+    tweets = df['text'].tolist()  #extracting the text column
     valid_indices = grover_search(tweets)
-
-    # Save target tweets to a CSV
+    #saving target tweets to a CSV
     output_file = "target_tweets.csv"
     save_to_csv(output_file, valid_indices, tweets)
