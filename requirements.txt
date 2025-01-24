@@ -1,3 +1,7 @@
 qiskit
 qiskit[visualization]
+qiskit_aer
+nltk
+dash
+flask
 nltk

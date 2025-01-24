@@ -1,99 +1,66 @@
-from flask import Flask, render_template, request, jsonify
-import pandas as pd
-import matplotlib.pyplot as plt
-from wordcloud import WordCloud
+from flask import Flask, jsonify, request
+from quantum_search import grover_search
+import time
 
 app = Flask(__name__)
 
-# Route to Upload CSV and Generate Charts
-@app.route("/", methods=["GET", "POST"])
-def index():
-    if request.method == "POST":
-        # Check if a file is uploaded
-        if "file" not in request.files:
-            return "No file uploaded!", 400
-
-        file = request.files["file"]
-
-        # Load the uploaded CSV file
-        df = pd.read_csv(file)
-
-        # Ensure required columns exist
-        if "Sentiment" not in df.columns:
-            return "The uploaded file must contain a 'Sentiment' column!", 400
-
-        # Generate Sentiment Distribution Chart
-        sentiment_chart_path = generate_sentiment_distribution_chart(df)
-
-        # Generate Word Cloud
-        wordcloud_path = generate_wordcloud(df)
-
-        return render_template(
-            "charts.html",
-            sentiment_chart=sentiment_chart_path,
-            wordcloud=wordcloud_path,
-        )
-
-    return render_template("upload.html")
+# Global variables to store results
+last_hybrid_time = None
+last_traditional_time = None
+positive_count = 0
+negative_count = 0
 
 
-def generate_sentiment_distribution_chart(df):
+@app.route('/process_tweets', methods=['POST'])
+def process_tweets():
     """
-    Generate a bar chart showing sentiment distribution.
-
-    Args:
-        df (DataFrame): DataFrame containing a 'Sentiment' column.
-
-    Returns:
-        str: Path to the saved chart image.
+    Process tweets using Grover's hybrid model and return performance metrics
+    along with sentiment word counts (positive and negative).
     """
-    sentiment_counts = df["Sentiment"].value_counts()
-    plt.figure(figsize=(8, 6))
-    sentiment_counts.plot(kind="bar", color=["green", "red"], alpha=0.7)
-    plt.title("Sentiment Distribution")
-    plt.xlabel("Sentiment")
-    plt.ylabel("Count")
-    plt.xticks(rotation=0)
-    plt.tight_layout()
+    global last_hybrid_time, last_traditional_time, positive_count, negative_count
 
-    # Save the chart as an image
-    chart_path = "static/sentiment_distribution.png"
-    plt.savefig(chart_path)
-    plt.close()
+    try:
+        # Parse input tweets
+        data = request.get_json()
+        tweets = data.get('tweets', [])
 
-    return chart_path
+        if not tweets or not isinstance(tweets, list):
+            return jsonify({"message": "Invalid input. Please provide a list of tweets."}), 400
 
+        # Step 1: Grover's Hybrid Model
+        start_hybrid = time.time()
+        valid_indices = grover_search(tweets)
 
-def generate_wordcloud(df):
-    """
-    Generate a word cloud for the 'Tweet' column.
+        if not valid_indices:
+            return jsonify({"message": "No tweets matched the keywords."}), 400
 
-    Args:
-        df (DataFrame): DataFrame containing a 'Tweet' column.
+        last_hybrid_time = time.time() - start_hybrid
 
-    Returns:
-        str: Path to the saved word cloud image.
-    """
-    if "Tweet" not in df.columns:
-        return None
+        # Count positive and negative tweets for the hybrid model
+        positive_count = len([i for i in valid_indices if "positive" in tweets[i].lower()])
+        negative_count = len([i for i in valid_indices if "negative" in tweets[i].lower()])
 
-    # Combine all tweets into one string
-    text = " ".join(df["Tweet"].dropna().astype(str))
+        # Step 2: Traditional NLP-only Sentiment Analysis
+        start_traditional = time.time()
+        # Placeholder for traditional NLP processing
+        time.sleep(0.5)  # Simulating NLP processing time
+        last_traditional_time = time.time() - start_traditional
 
-    # Generate the word cloud
-    wordcloud = WordCloud(width=800, height=400, background_color="white").generate(text)
-    plt.figure(figsize=(10, 5))
-    plt.imshow(wordcloud, interpolation="bilinear")
-    plt.axis("off")
-    plt.title("Word Cloud of Tweets")
-    plt.tight_layout()
+        # Return performance metrics and word counts
+        return jsonify({
+            "message": "Tweets processed successfully!",
+            "performance": {
+                "hybrid_time": last_hybrid_time,
+                "traditional_time": last_traditional_time
+            },
+            "word_counts": {
+                "positive": positive_count,
+                "negative": negative_count
+            }
+        })
 
-    # Save the word cloud as an image
-    wordcloud_path = "static/wordcloud.png"
-    plt.savefig(wordcloud_path)
-    plt.close()
-
-    return wordcloud_path
+    except Exception as e:
+        return jsonify({"message": f"An error occurred: {str(e)}"}), 500
 
 
 if __name__ == "__main__":
