@@ -104,8 +104,8 @@
 #     app.run_server(debug=True)
 
 
-import backend.dash_app as dash_app
-from backend.dash_app import dcc, html
+import frontend.dash_app as dash_app
+from frontend.dash_app import dcc, html
 import requests
 import plotly.express as px
 from wordcloud import WordCloud
