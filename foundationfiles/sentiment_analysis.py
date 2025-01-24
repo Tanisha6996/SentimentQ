@@ -3,26 +3,16 @@ from nltk import download
 import pandas as pd
 import time
 
-
-# Downloading  NLTK's VADER Lexicon
+#downloading  NLTK's VADER Lexicon
 download("vader_lexicon")
 
-# Initialize Sentiment Analyzer
+#intializing Sentiment Analyzer
 sia = SentimentIntensityAnalyzer()
 
 
 def analyze_sentiment(tweet):
-    """
-    Analyze the sentiment of a given tweet, ignoring neutral sentiment.
-
-    Args:
-        tweet (str): The text of the tweet.
-
-    Returns:
-        str: Sentiment label ('Positive' or 'Negative').
-    """
-    score = sia.polarity_scores(tweet)  # Get sentiment scores
-    return 'Positive' if score['compound'] >= 0 else 'Negative'
+    score = sia.polarity_scores(tweet)  #getting sentiment scores                   #tweet-Tscraped text data from twiiter.
+    return 'Positive' if score['compound'] >= 0 else 'Negative'                 #sentiment label('Positive' or 'Negative')
 
 def analyze_tweets_from_csv(csv_file, output_csv):
     """
