@@ -20,7 +20,7 @@ mental_health_keywords = [
     "#MentalHealth", "#SelfCare", "#Wellness", "#Mindfulness"
 ]
 
-# Preprocess Tweets and Encode Binary States
+#preprocessing Twitter-tweets and encoding them to binary states
 def preprocess_and_encode(tweets, keywords):
     stop_words = set(stopwords.words('english'))
 
@@ -40,7 +40,7 @@ def preprocess_and_encode(tweets, keywords):
         binary_states.append(1 if contains_keyword(cleaned_tweet, keywords) else 0)
     return binary_states
 
-# Save Target Tweets to CSV
+# Saving filtered data to csv
 def save_to_csv(file_name, valid_indices, tweets):
     try:
         with open(file_name, mode='w', newline='', encoding='utf-8') as file:
@@ -52,28 +52,22 @@ def save_to_csv(file_name, valid_indices, tweets):
     except Exception as e:
         print(f"Error saving to CSV: {e}")
 
-# Define Grover's Circuit
+#defining Grover's Circuit
 def grover_circuit(n, oracle):
     """
-    Construct Grover's Algorithm circuit.
-
-    Args:
         n (int): Number of qubits (equal to log2 of number of items).
         oracle (QuantumCircuit): The oracle circuit.
-
-    Returns:
-        QuantumCircuit: Grover's Algorithm circuit.
     """
     qc = QuantumCircuit(n)
-    # Step 1: Apply H-gates to all qubits
+    #apply H-gates to all qubits
     qc.h(range(n))
-    # Step 2: Apply Oracle
+    #applying Oracle
     qc.compose(oracle, inplace=True)  # Use compose instead of +=
-    # Step 3: Diffusion Operator
+    #diffusion Operator
     qc.h(range(n))
     qc.z(range(n))
     qc.cz(0, n - 1)  # Multi-controlled Z gate
-    qc.h(range(n))
+    qc.h(range(n))    #returns the QuantumCircuit or grover's algorithm circuit.
     return qc
 
 # Define Oracle Circuit
