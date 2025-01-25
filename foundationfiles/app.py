@@ -14,7 +14,7 @@ st.markdown(
     "Welcome to **Quansst**, an AI-driven platform that offers2 powerful NLP-based functionalities:"
 )
 st.markdown(
-    "- **NLP Sentiment Analysis**: Perform sentiment analysis on general text data.\n"
+    "- **NLP Sentiment AnalysisNLP Sentiment Analysis**: Perform sentiment analysis on general text data.\n"
     "- **Quantum Search & Sentiment Analysis**: Utilize quantum search to extract targeted tweets and analyze sentiment."
 )
 
@@ -22,23 +22,22 @@ st.markdown(
 st.sidebar.title("🔍 Select an NLP Task")
 app_mode = st.sidebar.radio(
     "Choose a function:",
-    ["Home", " NLP Sentiment Analysis", "Quantum Search & Sentiment Analysis"]
+    ["Home", "Generic NLP Sentiment Analysis", "Quantum Search & Sentiment Analysis"]
 )
 
 # ---- HOME PAGE ----
 if app_mode == "Home":
     st.header("Welcome to Quansst!")
     st.subheader("Choose an NLP task from the sidebar to get started.")
-    st.image("quansst_banner.png", use_column_width=True)  # Optional: Add a banner image
     st.markdown(
-        "🔹 **Generic NLP Sentiment Analysis:** Upload a CSV file with text data and analyze sentiment using the VADER model.\n"
+        "🔹 ** NLP Sentiment Analysis:** Upload a CSV file with text data and analyze sentiment using the VADER model.\n"
         "🔹 **Quantum Search & Sentiment Analysis:** Perform Grover-based quantum search on tweets and analyze their sentiment."
     )
     st.info("Select an option from the sidebar to proceed.")
 
 # ---- GENERIC NLP SENTIMENT ANALYSIS ----
 elif app_mode == "Generic NLP Sentiment Analysis":
-    st.header("📝 Generic NLP Sentiment Analysis")
+    st.header("📝 NLP Sentiment Analysis")
 
     # File uploader
     uploaded_file = st.file_uploader("Upload a CSV file containing text data", type=["csv"])
