@@ -55,22 +55,22 @@ elif app_mode == "Generic NLP Sentiment Analysis":
                 if "text" not in df.columns:
                     st.error("The uploaded CSV file must contain a 'text' column.")
                 else:
-                    # Save uploaded file
+                    #saving uploaded file
                     input_csv = "uploaded_text_data.csv"
                     df.to_csv(input_csv, index=False)
 
-                    # Process dataset with timing
+                    #processing dataset with timing
                     with st.spinner("Processing..."):
                         result_df, execution_time = analyzer.process_dataset(input_csv)
 
                     if result_df is not None:
                         st.success(f"Processing Time: {execution_time:.2f} seconds")
 
-                        # Display processed results
+                        #displaying processed results
                         st.subheader("📊 Processed Data")
                         st.dataframe(result_df)
 
-                        # Display sentiment distribution
+                        #displaying sentiment distribution
                         st.subheader("📈 Sentiment Distribution")
                         sentiment_counts = result_df["Sentiment"].value_counts()
                         st.bar_chart(sentiment_counts)
