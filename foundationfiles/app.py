@@ -9,7 +9,7 @@ analyzer = GenericNLPAnalyzer()
 
 # ---- APP TITLE ----
 st.set_page_config(page_title="Quansst", page_icon="✨", layout="wide")
-st.title("✨ Quansst: Quantum powered Text Processing")
+st.title("✨ Quansst")
 st.markdown(
     "Welcome to **Quansst**, an AI-driven platform that offers2 powerful NLP-based functionalities:"
 )
