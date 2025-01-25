@@ -4,17 +4,17 @@ import subprocess
 import os
 from generic_nlp import GenericNLPAnalyzer  # Import Generic NLP Analyzer
 
-# Initialize the Generic NLP Analyzer
+# intitializing Generic NLP Analyzer
 analyzer = GenericNLPAnalyzer()
 
 # ---- APP TITLE ----
 st.set_page_config(page_title="Quansst", page_icon="✨", layout="wide")
-st.title("✨ Quansst: AI-Powered Text Processing")
+st.title("✨ Quansst: Quantum powered Text Processing")
 st.markdown(
-    "Welcome to **Quansst**, an AI-driven platform that offers two powerful NLP-based functionalities:"
+    "Welcome to **Quansst**, an AI-driven platform that offers2 powerful NLP-based functionalities:"
 )
 st.markdown(
-    "- **Generic NLP Sentiment Analysis**: Perform sentiment analysis on general text data.\n"
+    "- **NLP Sentiment Analysis**: Perform sentiment analysis on general text data.\n"
     "- **Quantum Search & Sentiment Analysis**: Utilize quantum search to extract targeted tweets and analyze sentiment."
 )
 
@@ -22,7 +22,7 @@ st.markdown(
 st.sidebar.title("🔍 Select an NLP Task")
 app_mode = st.sidebar.radio(
     "Choose a function:",
-    ["Home", "Generic NLP Sentiment Analysis", "Quantum Search & Sentiment Analysis"]
+    ["Home", " NLP Sentiment Analysis", "Quantum Search & Sentiment Analysis"]
 )
 
 # ---- HOME PAGE ----
