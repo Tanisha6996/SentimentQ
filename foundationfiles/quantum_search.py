@@ -73,7 +73,8 @@ def grover_circuit(n, oracle):
 #defining Oracle circuit
 def oracle_circuit(binary_states):
     #binary_states (list): binary encoding of tweets (1 for keyword presence, 0 otherwise).
-    n = len(binary_states).bit_length()  #no. of qubits needed
+    #n = len(binary_states).bit_length()  #no. of qubits needed
+    n = (len(binary_states) - 1).bit_length()
     oracle = QuantumCircuit(n)
     for i, state in enumerate(binary_states):
         if state == 1:  #only processing states with 1
@@ -94,7 +95,8 @@ def grover_search(tweets):
         return []
 
     backend = Aer.get_backend('qasm_simulator')
-    n = len(binary_states).bit_length()
+    #n = len(binary_states).bit_length()
+    n = (len(binary_states) - 1).bit_length()
     oracle = oracle_circuit(binary_states)
     grover_qc = grover_circuit(n, oracle)
     grover_qc.measure_all()

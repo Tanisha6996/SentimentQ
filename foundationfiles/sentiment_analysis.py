@@ -18,11 +18,11 @@ def analyze_tweets_from_csv(csv_file, output_csv):
     df = pd.read_csv(csv_file)
 
     #checking if it exist or not
-    if "text" not in df.columns:
+    if "Tweet" not in df.columns:
         raise ValueError("The input CSV file must contain a 'Tweet' column!")
 
     #analyzing sentiments
-    df["Sentiment"] = df["text"].apply(analyze_sentiment)
+    df["Sentiment"] = df["Tweet"].apply(analyze_sentiment)
 
     # Save the results to a new CSV file
     df.to_csv(output_csv, index=False)
@@ -40,8 +40,8 @@ if __name__ == "__main__":
 
     # Analyzing sentiments from the CSV file and save results
     result_df = analyze_tweets_from_csv(input_csv, output_csv)
-
     end_time = time.time()
+
     #Printing time required t
     print(f"Grover Pipeline Time: {end_time - start_time:.2f} seconds")
 
